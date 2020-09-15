@@ -37,7 +37,6 @@ void loop() {
 
         // 33 is ASCII for ! (the first element in the char2braille array) 
         short braille_index = incoming_byte - 33;   
-
         Serial.print("char2braille index: "); 
         Serial.println(braille_index); 
         bool cell_array[6] = {0, 0, 0, 0, 0, 0};        // Initialize pin array 
@@ -48,12 +47,12 @@ void loop() {
         for(int j = 0; j < 6; j++) { 
             short pin = (current_cell * cell_size) + j; // pin/servo to change 
             
-            if (cell_array[j]) 
-                servos[pin].writeMicroseconds(pin_high); // set pin/servo to 180 if dot == 1
-            else 
-                servos[pin].writeMicroseconds(pin_low); // set pin/servo to 0 if dot == 0
+            if (cell_array[j])      // Set pin/servo to MAX if (dot == 1) 
+                servos[pin].writeMicroseconds(pin_high); 
+            else                    // Set pin/servo to MIN if (dot == 0)
+                servos[pin].writeMicroseconds(pin_low); 
             
-            current_cell ++;                            // go to next cell 
+            current_cell ++;        // go to next cell 
         } 
     } 
 } 
