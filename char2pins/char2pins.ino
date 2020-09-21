@@ -25,7 +25,8 @@ void setup() {
 
     for(int i = pinStart; i < pinEnd; i++) { 
         servos[i].attach(pins[i], 800, 2200);       // Attach all servos 
-        servos[i].writeMicroseconds(pin_low);                   // Set all to down 
+        servos[i].writeMicroseconds(pin_low);       // Set all to down 
+        delay(20);
     } 
 } 
 
@@ -52,7 +53,7 @@ void loop() {
             if (cell_array[j])      // Set pin/servo to MAX if (dot == 1) 
                 servos[pin].writeMicroseconds(pin_high); 
             else                    // Set pin/servo to MIN if (dot == 0)
-                servos[pin].writeMicroseconds(pin_low); 
+                servos[pin].writeMicroseconds(pin_low);
         }
 
         current_cell++; 
