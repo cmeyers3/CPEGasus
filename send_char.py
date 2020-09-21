@@ -47,7 +47,7 @@ def main():
         time.sleep(1)
         ser.write(string)
         print(ser.readline())
-
+        
 
 if __name__ == '__main__':
     main()
