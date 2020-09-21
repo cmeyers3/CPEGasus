@@ -5,6 +5,7 @@ bool braille_array[][6] = {
  * 1 4
  * 2 3 
  */
+{0, 0, 0, 0, 0, 0}, // SPACE
 {0, 1, 1, 0, 1, 0}, // ! 
 {0, 0, 1, 1, 1, 0}, // " this is really open quote, change later to parse 
 {0, 0, 1, 1, 1, 1}, // #
