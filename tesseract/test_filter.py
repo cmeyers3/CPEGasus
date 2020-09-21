@@ -51,8 +51,7 @@ def process_text(text):
 def group_text(text):
     #Separate text into groups of up to 8 to pass to the Arduino
     words = text.split()
-    carry_over = 0
-    carry = ""
+    carry = "" #leftovers from previous word
     for w in words:
         if carry != "":
             w = carry + " " + w
@@ -60,9 +59,11 @@ def group_text(text):
         if len(w) == 8:
             send_word(w)
         elif len(w) > 8:
-            if ' ' in w:
+            if ' ' in w: 
+                # too long and multiple words, split those words
                 temp = w.split()
-                for t in temp:
+                for t in temp: 
+                    # still too long, split with dashes
                     if len(t) > 8 and len(t[6:]) >5:
                         send_word(t[0:6] + '-')
                         send_word(t[6:])
@@ -71,17 +72,19 @@ def group_text(text):
                         carry = t[6:]
                     else:
                         send_word(t)
-            else:
+            else: 
+                # too long, split with dashes
                 send_word(w[0:6] + '-') #first 7 char and dash
                 if len(w[6:]) > 5:
                     send_word(w[6:])
                 else:
                     carry = w[6:]
         elif len(w) < 5:
+            # short word, save to see if combine with next word
             carry = w
         else:
             send_word(w)
-    send_word(carry)
+    send_word(carry) # send any remaining words stored
 
 def send_word(word):
     print(word)
