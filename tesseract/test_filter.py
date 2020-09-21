@@ -48,6 +48,43 @@ def process_text(text):
     text = text.strip()
     return text
 
+def group_text(text):
+    #Separate text into groups of up to 8 to pass to the Arduino
+    words = text.split()
+    carry_over = 0
+    carry = ""
+    for w in words:
+        if carry != "":
+            w = carry + " " + w
+        carry = "" # reset carry
+        if len(w) == 8:
+            send_word(w)
+        elif len(w) > 8:
+            if ' ' in w:
+                temp = w.split()
+                for t in temp:
+                    if len(t) > 8 and len(t[6:]) >5:
+                        send_word(t[0:6] + '-')
+                        send_word(t[6:])
+                    elif len(t) > 8:
+                        send_word(t[0:6] +'-')
+                        carry = t[6:]
+                    else:
+                        send_word(t)
+            else:
+                send_word(w[0:6] + '-') #first 7 char and dash
+                if len(w[6:]) > 5:
+                    send_word(w[6:])
+                else:
+                    carry = w[6:]
+        elif len(w) < 5:
+            carry = w
+        else:
+            send_word(w)
+    send_word(carry)
+
+def send_word(word):
+    print(word)
 
 def main():
     args = parse_args()
@@ -63,7 +100,14 @@ def main():
         print("-----------------")
         print("Processed string:")
         print("-----------------")
-        print(process_text(text))
+        proc_text = process_text(text)
+        print(proc_text)
+
+        # Group string
+        print("-----------------")
+        print("Grouped strings:")
+        print("-----------------")
+        print(group_text(proc_text))
 
 if __name__ == '__main__':
     main()
