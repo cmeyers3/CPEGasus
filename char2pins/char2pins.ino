@@ -10,33 +10,35 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define pinStart    = 0
-#define pinEnd      = 48;       // Number servos used
-#define cell_size   = 6;        // Dots per cell
-#define pin_high    = 2000;     // Servo HIGH angle
-#define pin_low     = 1000;     // Servo LOW angle
+#define pinStart    0
+#define pinEnd      48          // Number servos used
+#define cell_size   6           // Dots per cell
+#define pin_high    2000        // Servo HIGH angle
+#define pin_low     1000        // Servo LOW angle
 
-char incoming_byte = 0;  
-Servo servos[pinEnd];           // Create array of servos 
+char    incoming_byte   = 0;  
+short   current_cell    = 0;
+Servo   servos[pinEnd];         // Create array of servos 
 
 void setup() { 
-    Serial.begin(76800);        
+    Serial.begin(57600);        
 
     for(int i = pinStart; i < pinEnd; i++) { 
         servos[i].attach(pins[i], 800, 2200);       // Attach all servos 
-        servos[i].write(pin_low);                   // Set all to down 
+        servos[i].writeMicroseconds(pin_low);                   // Set all to down 
     } 
 } 
 
 void loop() { 
-    short current_cell 	= 0;                        // Start displaying at cell 0 
+    if (current_cell > 7) current_cell = 0;
 
-    if(Serial.available() > 0) { 
+    incoming_byte = Serial.read();
+    if(incoming_byte > 0) { 
         Serial.print("I received: "); 
         Serial.println(incoming_byte); 
 
-        // 33 is ASCII for ! (the first element in the char2braille array) 
-        short braille_index = incoming_byte - 33;   
+        // Convert ASCII to braille index (see char2braille_array.h)
+        short braille_index = incoming_byte - 32;   
         Serial.print("char2braille index: "); 
         Serial.println(braille_index); 
         bool cell_array[6] = {0, 0, 0, 0, 0, 0};        // Initialize pin array 
@@ -51,8 +53,8 @@ void loop() {
                 servos[pin].writeMicroseconds(pin_high); 
             else                    // Set pin/servo to MIN if (dot == 0)
                 servos[pin].writeMicroseconds(pin_low); 
-            
-            current_cell ++;        // go to next cell 
-        } 
+        }
+
+        current_cell++; 
     } 
 } 
