@@ -1,16 +1,44 @@
 # test_filter.py
 # - Runs tesseract on given image files and returns text to stdout
 
-import cv2
 import pytesseract
 import sys
 import os
 import re
+import pyautogui
 
+import serial
+
+import serial.tools.list_ports
+from serial import SerialException
+
+linux_port_dir = "/dev/"
+baud_rate = 57600
 
 def usage():
     print("Usage: py -3 {} <image file>".format(sys.argv[0]))
     raise SystemExit
+
+def get_port_name():
+    # If Linux: /dev/ttyUSB* or /dev/ttyACM*
+    if os.name == 'posix':
+        serial_ports = os.listdir(linux_port_dir)
+        print("Ports: {}".format(serial_ports))
+        for port in serial_ports:
+            if re.match("(ttyUSB[0-9]+|ttyACM[0-9]+)", port):
+                return port
+            
+    # If Windows: COM*
+    elif os.name == 'nt':
+        serial_ports = [p.device for p in serial.tools.list_ports.comports()]
+        if len(serial_ports) > 1:
+            raise SystemExit("Found multiple serial ports: {}. Exiting.".format(serial_ports))
+        elif len(serial_ports) < 1:
+            raise SystemExit("Found no valid serial ports. Exiting.")
+        return serial_ports[0]
+
+    # If fall through, no port found. Exit with error.
+    raise SystemExit("Could not find port. Exiting.")
 
 
 def parse_args():
@@ -87,30 +115,55 @@ def group_text(text):
     send_word(carry) # send any remaining words stored
 
 def send_word(word):
-    print(word)
+    while(len(word) < 8):
+        word = word + ' '
+    print("Sending: {}|\n".format(word))
+
+    word = word.encode('ASCII')
+    ser.write(word)
+
+    ard_ready = 0
+    while ard_ready == 0:
+        if ser.read() == '~'.encode('ASCII'):
+            print("Received ~")
+            ard_ready = 1
 
 def main():
-    args = parse_args()
-    for image in args['images']:
-        # Read in image, and send to pytesseract -> text
-        text = pytesseract.image_to_string(cv2.imread(image))
-        print("--------------------")
-        print("Preprocessed string:")
-        print("--------------------")
-        print(text)
+    global ser
+    # Port
+    port = get_port_name()
+    port = '/dev/' + port 
+    try:
+        ser = serial.Serial(port, baud_rate)
+        print("Opening port {}".format(port))
+    except SerialException:
+        print("Port {} already open".format(port))
+        raise SystemExit
 
-        # Process string
-        print("-----------------")
-        print("Processed string:")
-        print("-----------------")
-        proc_text = process_text(text)
-        print(proc_text)
+    #screenshot
+    os.environ['DISPLAY'] = ':0'
+    im1 = pyautogui.screenshot()
 
-        # Group string
-        print("-----------------")
-        print("Grouped strings:")
-        print("-----------------")
-        print(group_text(proc_text))
+    #for image in args['images']:
+    # Read in image, and send to pytesseract -> text
+    text = pytesseract.image_to_string(im1)
+    print("--------------------")
+    print("Preprocessed string:")
+    print("--------------------")
+    print(text)
+
+    # Process string
+    print("-----------------")
+    print("Processed string:")
+    print("-----------------")
+    proc_text = process_text(text)
+    print(proc_text)
+
+    # Group string
+    print("-----------------")
+    print("Grouped strings:")
+    print("-----------------")
+    print(group_text(proc_text))
 
 if __name__ == '__main__':
     main()

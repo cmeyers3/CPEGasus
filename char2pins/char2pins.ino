@@ -28,7 +28,7 @@ void setup() {
     for(int i = pinStart; i < pinEnd; i++) { 
         servos[i].attach(pins[i], 800, 2200);       // Attach all servos 
         servos[i].writeMicroseconds(pin_low);       // Set all to down 
-        delay(20);
+        delay(100);
     } 
 } 
 
@@ -54,12 +54,19 @@ void loop() {
                 servos[pin].writeMicroseconds(pin_low);
         }
 
+        delay(100);
         current_cell++; 
     } 
 
+    /*
     int val = analogRead(A0);
     if (val < thresh) {
         Serial.print(refresh);
         current_cell = 0;
     }
+    */
+   if (current_cell > 7) {
+        delay(4e3);
+        Serial.print(refresh);
+   }
 } 
