@@ -9,6 +9,8 @@ from serial import SerialException
 
 linux_port_dir = "/dev/"
 
+baud_rate = 57600
+
 
 # Get port name
 def get_port_name():
@@ -36,7 +38,7 @@ def get_port_name():
 def main():
     port = get_port_name()
     try:
-        ser = serial.Serial(port, 9600)
+        ser = serial.Serial(port, baud_rate)
         print("Opening port {}".format(port))
     except SerialException:
         print("Port {} already open".format(port))
