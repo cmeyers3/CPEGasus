@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+#define refresh     '~'         // Character to send for refresh
+#define thresh      500         // ADC threshold for photoresistor 
 #define pinStart    0
 #define pinEnd      48          // Number servos used
 #define cell_size   6           // Dots per cell
@@ -35,13 +37,9 @@ void loop() {
 
     incoming_byte = Serial.read();
     if(incoming_byte > 0) { 
-        Serial.print("I received: "); 
-        Serial.println(incoming_byte); 
 
         // Convert ASCII to braille index (see char2braille_array.h)
         short braille_index = incoming_byte - 32;   
-        Serial.print("char2braille index: "); 
-        Serial.println(braille_index); 
         bool cell_array[6] = {0, 0, 0, 0, 0, 0};        // Initialize pin array 
         
         for(short i = 0; i < 6; i++)                    // Get dot array  
@@ -58,4 +56,10 @@ void loop() {
 
         current_cell++; 
     } 
+
+    int val = analogRead(A0);
+    if (val < thresh) {
+        Serial.print(refresh);
+        current_cell = 0;
+    }
 } 
