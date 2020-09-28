@@ -8,6 +8,7 @@ import re
 import serial
 import pyautogui
 import pytesseract
+import serial.tools.list_ports
 
 linux_port_dir = "/dev/"
 baud_rate = 57600
