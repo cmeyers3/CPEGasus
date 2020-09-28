@@ -1,32 +1,34 @@
 # test_filter.py
 # - Runs tesseract on given image files and returns text to stdout
 
-import pytesseract
 import sys
 import os
 import re
-import pyautogui
 
 import serial
-
-import serial.tools.list_ports
-from serial import SerialException
+import pyautogui
+import pytesseract
 
 linux_port_dir = "/dev/"
 baud_rate = 57600
 
+
 def usage():
-    print("Usage: py -3 {} <image file>".format(sys.argv[0]))
+    print("Usage: python3 {}".format(sys.argv[0]))
     raise SystemExit
 
+
 def get_port_name():
+    '''
+    Retrieves port name of Arduino for Linux or Windows OS
+    '''
     # If Linux: /dev/ttyUSB* or /dev/ttyACM*
     if os.name == 'posix':
         serial_ports = os.listdir(linux_port_dir)
         print("Ports: {}".format(serial_ports))
         for port in serial_ports:
             if re.match("(ttyUSB[0-9]+|ttyACM[0-9]+)", port):
-                return port
+                return linux_port_dir + port
             
     # If Windows: COM*
     elif os.name == 'nt':
@@ -41,20 +43,10 @@ def get_port_name():
     raise SystemExit("Could not find port. Exiting.")
 
 
-def parse_args():
-    if len(sys.argv) <= 1:
-        usage()
-    args = {
-        'images' : sys.argv[1:]
-    }
-    for image in args['images']:
-        if not os.path.isfile(image):
-            print("Invalid image file passed.")
-            usage()
-
-    return args
-
 def process_text(text):
+    '''
+    Filters text to be ready for Braille translation
+    '''
     # Allow only alphanumeric and characters in 'allowed' list
     allowed = [' ', ',', '.', '!', '-', '?', '\'', '#']
     text = ''.join(
@@ -76,8 +68,11 @@ def process_text(text):
     text = text.strip()
     return text
 
+
 def group_text(text):
-    #Separate text into groups of up to 8 to pass to the Arduino
+    '''
+    Separate text into groups of up to 8 to pass to the Arduino
+    '''
     words = text.split()
     carry = "" #leftovers from previous word
     for w in words:
@@ -115,6 +110,9 @@ def group_text(text):
     send_word(carry) # send any remaining words stored
 
 def send_word(word):
+    '''
+    Helper function to send words to Arduino via serial port.
+    '''
     while(len(word) < 8):
         word = word + ' '
     print("Sending: {}|\n".format(word))
@@ -128,23 +126,23 @@ def send_word(word):
             print("Received ~")
             ard_ready = 1
 
+
 def main():
     global ser
-    # Port
+
+    # Retrieve port
     port = get_port_name()
-    port = '/dev/' + port 
     try:
         ser = serial.Serial(port, baud_rate)
         print("Opening port {}".format(port))
-    except SerialException:
+    except serial.SerialException:
         print("Port {} already open".format(port))
         raise SystemExit
 
-    #screenshot
+    # Screenshot
     os.environ['DISPLAY'] = ':0'
     im1 = pyautogui.screenshot()
 
-    #for image in args['images']:
     # Read in image, and send to pytesseract -> text
     text = pytesseract.image_to_string(im1)
     print("--------------------")
@@ -160,9 +158,9 @@ def main():
     print(proc_text)
 
     # Group string
-    print("-----------------")
+    print("----------------")
     print("Grouped strings:")
-    print("-----------------")
+    print("----------------")
     print(group_text(proc_text))
 
 if __name__ == '__main__':
