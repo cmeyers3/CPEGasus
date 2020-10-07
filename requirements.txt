@@ -1,3 +1,11 @@
-PyAutoGUI==0.9.50
 pytesseract==0.3.6
+PyAutoGUI==0.9.50
+pynput==1.7.1
 pyserial==3.4
+
+# IF WINDOWS
+win32gui==221.6
+
+# IF LINUX
+# Install scrot
+# Install xdotools
