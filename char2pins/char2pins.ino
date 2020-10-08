@@ -17,6 +17,7 @@
 #define pin_high    2000        // Servo HIGH angle
 #define pin_low     1000        // Servo LOW angle
 #define anaPin      A5          // Analog pin for photoresistor
+#define hold        100         // ms to delay between servo write
 
 char    incoming_byte   = 0;  
 short   current_cell    = 0;
@@ -29,12 +30,15 @@ void setup() {
     for(short i = pinStart; i < pinEnd; i++) { 
         servos[i].attach(pins[i], 800, 2200);       // Attach all servos 
         servos[i].writeMicroseconds(pin_low);       // Set all to down 
-        delay(100);
+        delay(hold);
     } 
 
     int temp = 0;
-    for (short i = 0; i < 1024; i++) temp += analogRead(anaPin); 
-    thresh = temp >> 10;
+    for (short i = 0; i < 10; i++) temp += analogRead(anaPin); 
+    thresh = temp / 10;
+
+    Serial.println(temp);
+    Serial.println(thresh);
 } 
 
 void loop() { 
@@ -52,19 +56,20 @@ void loop() {
         for(short j = 0; j < 6; j++) { 
             short pin = (current_cell * cell_size) + j; // pin/servo to change 
             
-            if (cell_array[j])      // Set pin/servo to MAX if (dot == 1) 
-                servos[pin].writeMicroseconds(pin_high); 
-            else                    // Set pin/servo to MIN if (dot == 0)
-                servos[pin].writeMicroseconds(pin_low);
+            // Set pin/servo to MAX if (dot == 1)
+            // Set pin/servo to MIN if (dot == 0)
+            if (cell_array[j]) servos[pin].writeMicroseconds(pin_high); 
+            else               servos[pin].writeMicroseconds(pin_low); 
         }
 
-        delay(100);
+        delay(hold);
         current_cell++; 
     } 
 
     int val = analogRead(A0);
-    if (val < (0.8 * thresh)) {
+    if (val < (0.95 * thresh)) {
         Serial.print(refresh);
         current_cell = 0;
+        delay(hold * 10);
     }
 } 
