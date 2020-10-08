@@ -1,3 +1,5 @@
+#!/bin/python
+
 # test_filter.py
 # - Runs tesseract on given image files and returns text to stdout
 
