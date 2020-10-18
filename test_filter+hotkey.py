@@ -6,6 +6,7 @@
 import sys
 import os
 import re
+import subprocess
 
 import serial
 import pyautogui
@@ -49,6 +50,50 @@ def get_port_name():
     # If fall through, no port found. Exit with error.
     raise SystemExit("Could not find port. Exiting.")
 
+
+def get_current_window():
+    if os.name == 'posix':
+
+        output = subprocess.check_output(
+            "xwininfo -id $(xdotool getactivewindow)", shell=True
+        ).decode("UTF-8")
+
+        x1, y1, w, h = 0, 0, 0, 0
+        for line in output.splitlines():
+            if re.match(".*Absolute upper-left X:.*", line):
+                x1 = int(line.split()[3])
+            elif re.match(".*Absolute upper-left Y:.*", line):
+                y1 = int(line.split()[3])
+            elif re.match(".*Width:.*", line):
+                w = int(line.split()[1])
+            elif re.match(".*Height:.*", line):
+                h = int(line.split()[1])
+
+        return pyautogui.screenshot(region=(x1, y1, w, h))
+
+    elif os.name == 'nt':
+        import win32gui
+        # Get current window + name
+        window = win32gui.GetForegroundWindow()
+        name = win32gui.GetWindowText(window)
+        print("Fetching window with name: {}".format(name))
+
+        # Get handle referring to window
+        winlist = []
+        def enum_cb(hwnd, results):
+            winlist.append((hwnd, win32gui.GetWindowText(hwnd)))
+        win32gui.EnumWindows(enum_cb, None)
+        hwnd = [hwnd for hwnd, title in winlist if title == name][0]
+
+        # Get rid of decorations on bounding box (I think?)
+        x, y, x1, y1 = win32gui.GetClientRect(hwnd)
+        x, y = win32gui.ClientToScreen(hwnd, (x, y))
+        x1, y1 = win32gui.ClientToScreen(hwnd, (x1 - x, y1 - y))
+
+        # Return screenshot
+        return pyautogui.screenshot(region=(x, y, x1, y1))
+
+
 def on_press(key):
     '''
     Runs when key is pressed to see if it is a hotkey
@@ -69,7 +114,8 @@ def screenshot():
     print("Taking Screenshot")
     # set variable to true
     os.environ['DISPLAY'] = ':0'
-    im1 = pyautogui.screenshot()
+    #im1 = pyautogui.screenshot()
+    im1 = get_current_window()
 
     # Read in image, and send to pytesseract -> text
     text = pytesseract.image_to_string(im1)
@@ -158,6 +204,7 @@ def group_text(text):
             send_word(w)
     send_word(carry) # send any remaining words stored
 
+
 def send_word(word):
     '''
     Helper function to send words to Arduino via serial port.
@@ -174,6 +221,7 @@ def send_word(word):
         if ser.read() == '~'.encode('ASCII'):
             print("Received ~")
             ard_ready = 1
+
 
 def main():
     global ser
