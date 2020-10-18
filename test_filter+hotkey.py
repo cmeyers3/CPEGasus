@@ -11,7 +11,7 @@ import subprocess
 import serial
 import pyautogui
 import pytesseract
-import serial.tools.list_ports
+import serial.tools.list_ports 
 from pynput import keyboard
 
 linux_port_dir = "/dev/"
@@ -206,6 +206,7 @@ def group_text(text):
 
 
 def send_word(word):
+    global ser
     '''
     Helper function to send words to Arduino via serial port.
     '''
@@ -236,8 +237,8 @@ def main():
         raise SystemExit
 
 
-with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
-    listener.join()
+    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+        listener.join()
 
 if __name__ == '__main__':
     main()

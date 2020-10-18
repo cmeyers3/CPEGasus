@@ -4,7 +4,7 @@ pynput==1.7.1
 pyserial==3.4
 
 # IF WINDOWS
-win32gui==221.6
+#win32gui==221.6
 
 # IF LINUX
 # Install scrot
