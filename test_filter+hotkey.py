@@ -119,8 +119,12 @@ def screenshot():
     print("Taking Screenshot")
     # set variable to true
     os.environ['DISPLAY'] = ':0'
-    #im1 = pyautogui.screenshot()
-    im1 = get_current_window()
+    
+    # Decide what to screenshot and remove tab-bar  
+    im = get_current_window()
+    width, height = im.size
+    im1 = im.crop((0, height/12, width, height))
+    im1.show()  #temp. Opens window to see what the screenshot looks like
 
     # Read in image, and send to pytesseract -> text
     text = pytesseract.image_to_string(im1)
