@@ -31,7 +31,7 @@ def get_port_name():
     Retrieves port name of Arduino for Linux or Windows OS
     '''
     # If Linux: /dev/ttyUSB* or /dev/ttyACM*
-    if os.name == 'posix':
+    if sys.platform == 'posix':
         serial_ports = os.listdir(linux_port_dir)
         print("Ports: {}".format(serial_ports))
         for port in serial_ports:
@@ -39,7 +39,7 @@ def get_port_name():
                 return linux_port_dir + port
             
     # If Windows: COM*
-    elif os.name == 'nt':
+    elif sys.platform == 'nt':
         serial_ports = [p.device for p in serial.tools.list_ports.comports()]
         if len(serial_ports) > 1:
             raise SystemExit("Found multiple serial ports: {}. Exiting.".format(serial_ports))
@@ -52,7 +52,8 @@ def get_port_name():
 
 
 def get_current_window():
-    if os.name == 'posix':
+    # For Linux
+    if sys.platform == 'posix':
 
         output = subprocess.check_output(
             "xwininfo -id $(xdotool getactivewindow)", shell=True
@@ -70,8 +71,9 @@ def get_current_window():
                 h = int(line.split()[1])
 
         return pyautogui.screenshot(region=(x1, y1, w, h))
-
-    elif os.name == 'nt':
+    
+    # For Windows
+    elif sys.platform == 'nt':
         import win32gui
         # Get current window + name
         window = win32gui.GetForegroundWindow()
@@ -92,7 +94,10 @@ def get_current_window():
 
         # Return screenshot
         return pyautogui.screenshot(region=(x, y, x1, y1))
-
+    
+    # For other OS's, screenshot whole screen
+    else:
+        return pyautogui.screenshot()
 
 def on_press(key):
     '''
