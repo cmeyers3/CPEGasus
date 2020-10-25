@@ -172,6 +172,24 @@ def process_text(text):
     text = text.strip()
     return text
 
+def pad_numbers(text):
+    '''
+    Pad text by adding an indicator character (`) before any numbers
+    '''
+    newWord = ''
+    prevChar = ''
+
+    # check if there is a number in the word and need to add padding character
+    for char in text:
+        # change the group to add the padding char (`)
+        if char.isdigit() and prevChar != '`': #if number and not already padded
+            newWord += '`'
+            newWord += char
+        else:
+            newWord += char
+        prevChar = char
+    return newWord
+
 
 def group_text(text):
     '''
@@ -179,10 +197,13 @@ def group_text(text):
     '''
     words = text.split()
     carry = "" #leftovers from previous word
-    for w in words:
+    for init_w in words:
         if carry != "":
-            w = carry + " " + w
+            init_w = carry + " " + init_w
         carry = "" # reset carry
+        
+        w = pad_numbers(init_w) # add in extra char if string includes a number
+
         if len(w) == 8:
             send_word(w)
         elif len(w) > 8:
