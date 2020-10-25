@@ -31,7 +31,8 @@ def get_port_name():
     Retrieves port name of Arduino for Linux or Windows OS
     '''
     # If Linux: /dev/ttyUSB* or /dev/ttyACM*
-    if sys.platform == 'posix':
+    if sys.platform == 'posix' or 'linux' in sys.platform:
+        print("Here")
         serial_ports = os.listdir(linux_port_dir)
         print("Ports: {}".format(serial_ports))
         for port in serial_ports:
@@ -53,7 +54,7 @@ def get_port_name():
 
 def get_current_window():
     # For Linux
-    if sys.platform == 'posix':
+    if sys.platform == 'posix' or 'linux' in sys.platform:
 
         output = subprocess.check_output(
             "xwininfo -id $(xdotool getactivewindow)", shell=True
@@ -262,11 +263,8 @@ def main():
     try:
         ser = serial.Serial(port, baud_rate)
         print("Opening port {}".format(port))
-    except serial.SerialException:
-        print("Port {} already open".format(port))
-        raise SystemExit
-
-
+    except serial.SerialException as e:
+        raise SystemExit(e)
     with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
 
