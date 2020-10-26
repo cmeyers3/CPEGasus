@@ -97,6 +97,7 @@ def get_current_window():
     
     else:
         return pyautogui.screenshot()
+
 def on_press(key):
     '''
     Runs when key is pressed to see if it is a hotkey
@@ -149,7 +150,7 @@ def process_text(text):
     Filters text to be ready for Braille translation
     '''
     # Allow only alphanumeric and characters in 'allowed' list
-    allowed = [' ', ',', '.', '!', '-', '?', '\'', '#']
+    allowed = [' ', ',', '.', '!', '-', '?', ';', ':', '"', '\'', '/']
     text = ''.join(
         c.lower() if c.isalnum() or c in allowed else ' '
         for c in text
@@ -161,6 +162,7 @@ def process_text(text):
         '&'                : 'and', # & -> and
         '\.+'              : ' ',   # Ellipses -> space
         '\s\s+'            : ' ',   # Multiple whitespace -> space
+        '\s*:\s*'           : ':',   # Remove spaces around colons
     }
     for key, value in subs.items():
         text = re.sub(key, value, text)
@@ -207,22 +209,22 @@ def group_text(text):
                 # too long and multiple words, split those words
                 temp = w.split()
                 for t in temp: 
-                    # still too long, split with dashes
-                    if len(t) > 8 and len(t[6:]) >5:
-                        send_word(t[0:6] + '-')
-                        send_word(t[6:])
+                    # still too long, split word with dashes
+                    if len(t) > 8 and len(t[6:]) > 5: #if word fills two transmissions, go ahead and send
+                        send_word(t[0:7] + '-')
+                        send_word(t[7:])
                     elif len(t) > 8:
-                        send_word(t[0:6] +'-')
-                        carry = t[6:]
+                        send_word(t[0:7] +'-')
+                        carry = t[7:]
                     else:
                         send_word(t)
             else: 
                 # too long, split with dashes
-                send_word(w[0:6] + '-') #first 7 char and dash
-                if len(w[6:]) > 5:
-                    send_word(w[6:])
+                send_word(w[0:7] + '-') #first 7 char and dash
+                if len(w[7:]) > 5:
+                    send_word(w[7:])
                 else:
-                    carry = w[6:]
+                    carry = w[7:]
         elif len(w) < 5:
             # short word, save to see if combine with next word
             carry = w
