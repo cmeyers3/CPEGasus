@@ -189,12 +189,30 @@ def pad_numbers(text):
         prevChar = char
     return newWord
    
+def split_by_punct(text):
+    '''
+    Takes split text and sends the correct segments from that. Returns any carry remaining
+    '''
+    print("In split_by_punct")
+    for t in text:
+        if len(t) > 8 and len(t[6:]) > 5: #if word fills two transmissions, go ahead and send
+            send_word(t[0:7] + '-')
+            send_word(t[7:])
+        elif len(t) > 8:
+            send_word(t[0:7] +'-')
+            return t[7:]
+        else:
+            send_word(t)
+    return ""
+
+
 def group_text(text):
     '''
     Separate text into groups of up to 8 to pass to the Arduino
     '''
     words = text.split()
     carry = "" #leftovers from previous word
+    puncts = '([-:,.!?;/])'
     for init_w in words:
         if carry != "":
             init_w = carry + " " + init_w
@@ -206,18 +224,13 @@ def group_text(text):
             send_word(w)
         elif len(w) > 8:
             if ' ' in w: 
-                # too long and multiple words, split those words
+                # too long and multiple words, split those words and send
                 temp = w.split()
-                for t in temp: 
-                    # still too long, split word with dashes
-                    if len(t) > 8 and len(t[6:]) > 5: #if word fills two transmissions, go ahead and send
-                        send_word(t[0:7] + '-')
-                        send_word(t[7:])
-                    elif len(t) > 8:
-                        send_word(t[0:7] +'-')
-                        carry = t[7:]
-                    else:
-                        send_word(t)
+                carry = split_by_punct(temp)
+            elif any((p in puncts) for p in w): 
+                # too long and other punctuation to split on, split those words and send
+                temp = re.split(puncts, w)
+                carry = split_by_punct(temp)      
             else: 
                 # too long, split with dashes
                 send_word(w[0:7] + '-') #first 7 char and dash
