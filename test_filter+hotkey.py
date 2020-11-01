@@ -38,7 +38,6 @@ def get_port_name():
     '''
     # If Linux: /dev/ttyUSB* or /dev/ttyACM*
     if sys.platform == 'posix' or 'linux' in sys.platform:
-        print("Here")
         serial_ports = os.listdir(linux_port_dir)
         print("Ports: {}".format(serial_ports))
         for port in serial_ports:
@@ -161,7 +160,7 @@ def process_text(text):
     Filters text to be ready for Braille translation
     '''
     # Allow only alphanumeric and characters in 'allowed' list
-    allowed = [' ', ',', '.', '!', '-', '?', '\'', '#']
+    allowed = [' ', ',', '.', '!', '-', '?', '\'', '#', ';', ':', '/']
     text = ''.join(
         c.lower() if c.isalnum() or c in allowed else ' '
         for c in text
@@ -173,6 +172,7 @@ def process_text(text):
         '&'                : 'and', # & -> and
         '\.+'              : ' ',   # Ellipses -> space
         '\s\s+'            : ' ',   # Multiple whitespace -> space
+        '\s*:\s*'          : ':',   # Remove spaces around colons
     }
     for key, value in subs.items():
         text = re.sub(key, value, text)
@@ -199,6 +199,20 @@ def pad_numbers(text):
         prevChar = char
     return newWord
 
+def split_by_punct(text):
+    '''
+    Takes split text and sends the correct segments from that. Returns any carry remaining
+    '''
+    for t in text:
+        if len(t) > 8 and len(t[6:]) > 5: #if word fills two transmissions, go ahead and send
+            send_word(t[0:7] + '-')
+            send_word(t[7:])
+        elif len(t) > 8:
+            send_word(t[0:7] +'-')
+            return t[7:]
+        else:
+            send_word(t)
+    return ""
 
 def group_text(text):
     '''
@@ -206,6 +220,7 @@ def group_text(text):
     '''
     words = text.split()
     carry = "" #leftovers from previous word
+    puncts = '([-:,.!?;/])'
     for init_w in words:
         if carry != "":
             init_w = carry + " " + init_w
@@ -217,25 +232,20 @@ def group_text(text):
             send_word(w)
         elif len(w) > 8:
             if ' ' in w: 
-                # too long and multiple words, split those words
+                # too long and multiple words, split those words and send
                 temp = w.split()
-                for t in temp: 
-                    # still too long, split with dashes
-                    if len(t) > 8 and len(t[6:]) >5:
-                        send_word(t[0:6] + '-')
-                        send_word(t[6:])
-                    elif len(t) > 8:
-                        send_word(t[0:6] +'-')
-                        carry = t[6:]
-                    else:
-                        send_word(t)
+                carry = split_by_punct(temp)
+            elif any((p in puncts) for p in w):
+                # too long and other punctuation to split on, split those words and send
+                temp = re.split(puncts, w)
+                carry = split_by_punct(temp)      
             else: 
                 # too long, split with dashes
-                send_word(w[0:6] + '-') #first 7 char and dash
-                if len(w[6:]) > 5:
-                    send_word(w[6:])
+                send_word(w[0:7] + '-') #first 7 char and dash
+                if len(w[7:]) > 5:
+                    send_word(w[7:])
                 else:
-                    carry = w[6:]
+                    carry = w[7:]
         elif len(w) < 5:
             # short word, save to see if combine with next word
             carry = w
