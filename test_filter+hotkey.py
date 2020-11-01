@@ -17,9 +17,15 @@ from pynput import keyboard
 linux_port_dir = "/dev/"
 baud_rate = 57600
 current = set()
-hotkeys = [
-    {keyboard.Key.ctrl, keyboard.KeyCode(char='`')}
-]
+hotkeys = []
+if 'linux' in sys.platform:
+    hotkeys = [
+        {keyboard.Key.ctrl, keyboard.KeyCode(char='`')}
+    ]
+elif 'win32' in sys.platform:
+    hotkeys = [
+        {keyboard.Key.ctrl_l, keyboard.Key.tab}
+    ]
 
 def usage():
     print("Usage: python3 {}".format(sys.argv[0]))
@@ -31,7 +37,8 @@ def get_port_name():
     Retrieves port name of Arduino for Linux or Windows OS
     '''
     # If Linux: /dev/ttyUSB* or /dev/ttyACM*
-    if sys.platform == 'posix':
+    if sys.platform == 'posix' or 'linux' in sys.platform:
+        print("Here")
         serial_ports = os.listdir(linux_port_dir)
         print("Ports: {}".format(serial_ports))
         for port in serial_ports:
@@ -39,7 +46,7 @@ def get_port_name():
                 return linux_port_dir + port
             
     # If Windows: COM*
-    elif sys.platform == 'nt':
+    elif sys.platform == 'win32':
         serial_ports = [p.device for p in serial.tools.list_ports.comports()]
         if len(serial_ports) > 1:
             raise SystemExit("Found multiple serial ports: {}. Exiting.".format(serial_ports))
@@ -53,7 +60,7 @@ def get_port_name():
 
 def get_current_window():
     # For Linux
-    if sys.platform == 'posix':
+    if sys.platform == 'posix' or 'linux' in sys.platform:
 
         output = subprocess.check_output(
             "xwininfo -id $(xdotool getactivewindow)", shell=True
@@ -73,7 +80,7 @@ def get_current_window():
         return pyautogui.screenshot(region=(x1, y1, w, h))
     
     # For Windows
-    elif sys.platform == 'nt':
+    elif sys.platform == 'win32':
         import win32gui
         # Get current window + name
         window = win32gui.GetForegroundWindow()
@@ -103,7 +110,9 @@ def on_press(key):
     '''
     Runs when key is pressed to see if it is a hotkey
     '''
+    print(key)
     if any([key in hotkey for hotkey in hotkeys]):
+        print("Adding key")
         current.add(key)
         if any(all(k in current for k in hotkey) for hotkey in hotkeys):
             screenshot()
@@ -262,11 +271,8 @@ def main():
     try:
         ser = serial.Serial(port, baud_rate)
         print("Opening port {}".format(port))
-    except serial.SerialException:
-        print("Port {} already open".format(port))
-        raise SystemExit
-
-
+    except serial.SerialException as e:
+        raise SystemExit(e)
     with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
 
