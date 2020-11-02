@@ -160,7 +160,7 @@ def process_text(text):
     Filters text to be ready for Braille translation
     '''
     # Allow only alphanumeric and characters in 'allowed' list
-    allowed = [' ', ',', '.', '!', '-', '?', '\'', '#', ';', ':', '/']
+    allowed = [' ', '!', '"', '#', '$', '-', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', ':', ';', '<', '=', '>', '?', '@']
     text = ''.join(
         c.lower() if c.isalnum() or c in allowed else ' '
         for c in text
