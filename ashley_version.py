@@ -220,32 +220,7 @@ def split_by_punct(text):
         else:
             send_word(to_send)
         
-    print("returning " + carry)
     return carry
-
-    '''
-    for t in text:
-        print(" t is " + t)
-        if carry is not "": # if some carry exists, need to send whole thing back to main program
-            print("Know carry is " + carry)
-            carry = carry + " " + t
-            next
-        else:
-            if len(t) > 8 and len(t[6:]) > 5: #if word fills two transmissions, go ahead and send
-                send_word(t[0:7] + '-')
-                send_word(t[7:])
-                carry =  t[14:]
-            elif len(t) > 8:
-                send_word(t[0:7] +'-')
-                carry = t[7:]
-            elif len(t) < 5: #if too short
-                carry = t
-            else:   
-                send_word(t)
-    
-    print("Returning " + carry)
-    return carry
-    '''
 
 def group_text(text):
     '''
@@ -267,14 +242,10 @@ def group_text(text):
             if ' ' in w: 
                 # too long and multiple words, split those words and send
                 temp = w.split()
-                print("temp is ")
-                print(temp)
                 carry = split_by_punct(temp)
             elif any((p in puncts) for p in w): 
                 # too long and other punctuation to split on, split those words and send
                 temp = re.split(puncts, w)
-                print("puncts temp is ")
-                print(temp)
                 carry = split_by_punct(temp)      
             else: 
                 # too long, split with dashes
