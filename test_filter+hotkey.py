@@ -203,16 +203,34 @@ def split_by_punct(text):
     '''
     Takes split text and sends the correct segments from that. Returns any carry remaining
     '''
+    print("In split_by_punct")
+    carry = ""
+    to_send = ""
+    
     for t in text:
-        if len(t) > 8 and len(t[6:]) > 5: #if word fills two transmissions, go ahead and send
-            send_word(t[0:7] + '-')
-            send_word(t[7:])
-        elif len(t) > 8:
-            send_word(t[0:7] +'-')
-            return t[7:]
+        if carry !="" and (t != "" and t != " "):
+            send_word(carry)
+        elif carry != "":
+            next
+        carry = ""
+
+        to_send = t
+
+        if len(to_send) == 8:
+            send_word(to_send)
+        elif len(to_send) > 8:
+            # split word with dashes
+            send_word(to_send[0:7] + '-')
+            if len(to_send[7:]) > 5:
+                send_word(to_send[7:])
+            else:
+                carry = to_send[7:]
+        elif len(to_send) < 5:
+            carry = to_send
         else:
-            send_word(t)
-    return ""
+            send_word(to_send)
+        
+    return carry
 
 def group_text(text):
     '''
@@ -235,7 +253,7 @@ def group_text(text):
                 # too long and multiple words, split those words and send
                 temp = w.split()
                 carry = split_by_punct(temp)
-            elif any((p in puncts) for p in w):
+            elif any((p in puncts) for p in w): 
                 # too long and other punctuation to split on, split those words and send
                 temp = re.split(puncts, w)
                 carry = split_by_punct(temp)      
@@ -252,6 +270,7 @@ def group_text(text):
         else:
             send_word(w)
     send_word(carry) # send any remaining words stored
+
 
 
 def send_word(word):
