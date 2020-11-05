@@ -16,7 +16,7 @@
 #define cell_size   6           // Dots per cell
 #define pin_high    2000        // Servo HIGH angle
 #define pin_low     1000        // Servo LOW angle
-#define anaPin      A5          // Analog pin for photoresistor
+#define anaPin      A0          // Analog pin for photoresistor
 #define hold        100         // ms to delay between servo write
 
 char    incoming_byte   = 0;  
@@ -66,7 +66,7 @@ void loop() {
         current_cell++; 
     } 
 
-    int val = analogRead(A0);
+    int val = analogRead(anaPin);
     if (val < (0.95 * thresh)) {
         Serial.print(refresh);
         current_cell = 0;

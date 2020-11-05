@@ -97,6 +97,7 @@ def get_current_window():
     
     else:
         return pyautogui.screenshot()
+
 def on_press(key):
     '''
     Runs when key is pressed to see if it is a hotkey
@@ -149,7 +150,7 @@ def process_text(text):
     Filters text to be ready for Braille translation
     '''
     # Allow only alphanumeric and characters in 'allowed' list
-    allowed = [' ', ',', '.', '!', '-', '?', '\'', '#']
+    allowed = [' ', ',', '.', '!', '-', '?', ';', ':', '"', '\'', '/']
     text = ''.join(
         c.lower() if c.isalnum() or c in allowed else ' '
         for c in text
@@ -161,6 +162,7 @@ def process_text(text):
         '&'                : 'and', # & -> and
         '\.+'              : ' ',   # Ellipses -> space
         '\s\s+'            : ' ',   # Multiple whitespace -> space
+        '\s*:\s*'           : ':',   # Remove spaces around colons
     }
     for key, value in subs.items():
         text = re.sub(key, value, text)
@@ -187,12 +189,46 @@ def pad_numbers(text):
         prevChar = char
     return newWord
    
+def split_by_punct(text):
+    '''
+    Takes split text and sends the correct segments from that. Returns any carry remaining
+    '''
+    print("In split_by_punct")
+    carry = ""
+    to_send = ""
+    
+    for t in text:
+        if carry !="" and (t != "" and t != " "):
+            send_word(carry)
+        elif carry != "":
+            next
+        carry = ""
+
+        to_send = t
+
+        if len(to_send) == 8:
+            send_word(to_send)
+        elif len(to_send) > 8:
+            # split word with dashes
+            send_word(to_send[0:7] + '-')
+            if len(to_send[7:]) > 5:
+                send_word(to_send[7:])
+            else:
+                carry = to_send[7:]
+        elif len(to_send) < 5:
+            carry = to_send
+        else:
+            send_word(to_send)
+        
+    return carry
+
 def group_text(text):
     '''
     Separate text into groups of up to 8 to pass to the Arduino
     '''
     words = text.split()
     carry = "" #leftovers from previous word
+    puncts = '([-:,.!?;/])'
     for init_w in words:
         if carry != "":
             init_w = carry + " " + init_w
@@ -204,25 +240,20 @@ def group_text(text):
             send_word(w)
         elif len(w) > 8:
             if ' ' in w: 
-                # too long and multiple words, split those words
+                # too long and multiple words, split those words and send
                 temp = w.split()
-                for t in temp: 
-                    # still too long, split with dashes
-                    if len(t) > 8 and len(t[6:]) >5:
-                        send_word(t[0:6] + '-')
-                        send_word(t[6:])
-                    elif len(t) > 8:
-                        send_word(t[0:6] +'-')
-                        carry = t[6:]
-                    else:
-                        send_word(t)
+                carry = split_by_punct(temp)
+            elif any((p in puncts) for p in w): 
+                # too long and other punctuation to split on, split those words and send
+                temp = re.split(puncts, w)
+                carry = split_by_punct(temp)      
             else: 
                 # too long, split with dashes
-                send_word(w[0:6] + '-') #first 7 char and dash
-                if len(w[6:]) > 5:
-                    send_word(w[6:])
+                send_word(w[0:7] + '-') #first 7 char and dash
+                if len(w[7:]) > 5:
+                    send_word(w[7:])
                 else:
-                    carry = w[6:]
+                    carry = w[7:]
         elif len(w) < 5:
             # short word, save to see if combine with next word
             carry = w
