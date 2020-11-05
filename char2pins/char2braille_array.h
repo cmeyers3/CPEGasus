@@ -7,8 +7,8 @@ bool braille_array[][6] = {
  */
 {0, 0, 0, 0, 0, 0}, // SPACE
 {0, 1, 1, 0, 1, 0}, // ! 
-{0, 0, 1, 1, 1, 0}, // " this is really open quote, change later to parse 
-{0, 0, 1, 1, 1, 1}, // # requires 2 cells (right straight down)
+{0, 0, 1, 1, 1, 0}, // " (Open quote)
+{0, 0, 1, 1, 1, 1}, // # (Starts number)
 {0, 1, 0, 1, 1, 0}, // $ requires 2 cells (top right)
 {0, 0, 0, 0, 0, 0}, // % percent is actually 3 cells....this is a placeholder
 {1, 1, 1, 1, 0, 1}, // & requires 2 cells (top right)
@@ -20,17 +20,17 @@ bool braille_array[][6] = {
 {0, 1, 0, 0, 0, 0}, // , 
 {0, 0, 1, 1, 0, 0}, // - 
 {0, 1, 0, 1, 1, 0}, // . 
-{0, 0, 1, 0, 0, 1}, // / requires 2 cells, placeholder
-{0, 1, 0, 0, 1, 1}, // 0 requires 2 cells
-{1, 0, 0, 0, 0, 0}, // 1 requires 2 cells
-{1, 1, 0, 0, 0, 0}, // 2 requires 2 cells
-{1, 0, 0, 0, 0, 1}, // 3 requires 2 cells
-{1, 0, 0, 0, 1, 1}, // 4 requires 2 cells
-{1, 0, 0, 0, 1, 0}, // 5 requires 2 cells
-{1, 1, 0, 0, 0, 1}, // 6 requires 2 cells
-{1, 1, 0, 0, 1, 1}, // 7 requires 2 cells
-{1, 1, 0, 0, 1, 0}, // 8 requires 2 cells
-{0, 1, 0, 0, 0, 1}, // 9 requires 2 cells
+{0, 0, 1, 0, 0, 1}, // / (2 cells, start with #)
+{0, 1, 0, 0, 1, 1}, // 0 (2 cells, start with #)
+{1, 0, 0, 0, 0, 0}, // 1 (2 cells, start with #)
+{1, 1, 0, 0, 0, 0}, // 2 (2 cells, start with #)
+{1, 0, 0, 0, 0, 1}, // 3 (2 cells, start with #)
+{1, 0, 0, 0, 1, 1}, // 4 (2 cells, start with #)
+{1, 0, 0, 0, 1, 0}, // 5 (2 cells, start with #)
+{1, 1, 0, 0, 0, 1}, // 6 (2 cells, start with #)
+{1, 1, 0, 0, 1, 1}, // 7 (2 cells, start with #)
+{1, 1, 0, 0, 1, 0}, // 8 (2 cells, start with #)
+{0, 1, 0, 0, 0, 1}, // 9 (2 cells, start with #)
 {0, 1, 0, 0, 1, 0}, // : 
 {0, 1, 1, 0, 0, 0}, // ; 
 {0, 0, 0, 0, 0, 0}, // < requires 2 cells, placeholder 
