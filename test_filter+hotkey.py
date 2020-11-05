@@ -171,7 +171,7 @@ def process_text(text):
     subs = {
         '\S+\.\S+(\.\S+)?' : '',    # Get rid of websites
         '&'                : 'and', # & -> and
-        '\.+'              : ' ',   # Ellipses -> space
+        '\..+'              : ' ',   # Ellipses -> space
         '\s\s+'            : ' ',   # Multiple whitespace -> space
     }
     for key, value in subs.items():
