@@ -1,6 +1,6 @@
 pytesseract==0.3.6
 PyAutoGUI==0.9.50
-pynput==1.7.1
+pynput==1.6.8
 pyserial==3.4
 
 # IF WINDOWS
