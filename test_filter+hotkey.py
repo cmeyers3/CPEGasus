@@ -91,6 +91,8 @@ def get_current_window():
         def enum_cb(hwnd, results):
             winlist.append((hwnd, win32gui.GetWindowText(hwnd)))
         win32gui.EnumWindows(enum_cb, None)
+        if len(winlist) == 0:
+            raise SystemExit("Error - Could not find any active windows!")
         hwnd = [hwnd for hwnd, title in winlist if title == name][0]
 
         # Get rid of decorations on bounding box (I think?)
@@ -170,7 +172,7 @@ def process_text(text):
     subs = {
         '\S+\.\S+(\.\S+)?' : '',    # Get rid of websites
         '&'                : 'and', # & -> and
-        '\..+'              : ' ',   # Ellipses -> space
+        '\.+'              : ' ',   # Ellipses -> space
         '\s\s+'            : ' ',   # Multiple whitespace -> space
         '\s*:\s*'          : ':',   # Remove spaces around colons
     }
