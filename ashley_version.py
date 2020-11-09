@@ -203,7 +203,7 @@ def split_by_punct(text):
         if carry !="" and (t != "" and t != " ") and len(t) > 8-len(carry):
             send_word(carry)
             to_send = t
-        elif carry !="" and (t != "" and t != " ") and len(t) < 8-len(carry): #less than b/c -
+        elif carry !="" and (t != "" and t != " ") and len(t) < 8-len(carry): #less than b/c dash
             to_send = carry + ' ' + t
             must_send = True
         elif carry != "":
@@ -227,11 +227,20 @@ def split_by_punct(text):
     return carry
 
 def split_word_with_dashes(word):
-    i = 7 # index of current position in word. Start at 7 b/c end index of first word
-    send_word(word[0:i] + '-')
+    i = 0 # index of current position in word. Start at 7 b/c end index of first word
+        
     while len(word[i:]) > 5:
-        send_word(word[i:i+7] + '-')
-        i = i + 7
+        #check if last digit a # and move that symbol to next word
+        if len(word) > i + 6:
+            if word[i+6] == '#':
+                send_word(word[i:i+6] + '-')
+                i = i + 6
+            else:
+                send_word(word[i:i+7] + '-')
+                i = i + 7
+        else:
+            send_word(word[i:i+7] + '-')
+            i = i + 7
     carry = word[i:]
 
     return carry
