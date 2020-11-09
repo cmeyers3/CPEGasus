@@ -10,6 +10,7 @@ import os
 import re
 import subprocess
 
+import unidecode
 import serial
 import pyautogui
 import pytesseract
@@ -193,7 +194,6 @@ def split_by_punct(text):
     '''
     Takes split text and sends the correct segments from that. Returns any carry remaining
     '''
-    print("In split_by_punct")
     carry = ""
     to_send = ""
     
@@ -269,10 +269,14 @@ def send_word(word):
     '''
     while(len(word) < 8):
         word = word + ' '
-    print("Sending: {}|\n".format(word))
+    
+    #check if contains accented characters and translates to ascii
+    norm_word = unidecode.unidecode(word)
 
-    word = word.encode('ASCII')
-    #ser.write(word)
+    print("Sending: {}|\n".format(norm_word))
+
+    norm_word = norm_word.encode('ASCII', 'ignore')
+    #ser.write(norm_word)
 
     ard_ready = 0
     count = 0
