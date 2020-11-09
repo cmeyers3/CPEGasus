@@ -123,7 +123,7 @@ def screenshot():
     im = get_current_window()
     width, height = im.size
     im1 = im.crop((0, height/12, width, height))
-    im1.show()
+    #im1.show()
     
     # Read in image, and send to pytesseract -> text
     text = pytesseract.image_to_string(im1, lang='eng')
@@ -174,16 +174,16 @@ def process_text(text):
 
 def pad_numbers(text):
     '''
-    Pad text by adding an indicator character (`) before any numbers
+    Pad text by adding an indicator character (#) before any numbers
     '''
     newWord = ''
     prevChar = ''
 
     # check if there is a number in the word and need to add padding character
     for char in text:
-        # change the group to add the padding char (`)
-        if char.isdigit() and prevChar != '`': #if number and not already padded
-            newWord += '`'
+        # change the group to add the padding char (#)
+        if char.isdigit() and not (prevChar.isdigit() or prevChar == '#' or prevChar == '.' or prevChar == ','): #if number and not already padded
+            newWord += '#'
             newWord += char
         else:
             newWord += char
@@ -272,10 +272,9 @@ def send_word(word):
     
     #check if contains accented characters and translates to ascii
     norm_word = unidecode.unidecode(word)
-
     print("Sending: {}|\n".format(norm_word))
-
     norm_word = norm_word.encode('ASCII', 'ignore')
+    
     #ser.write(norm_word)
 
     ard_ready = 0
