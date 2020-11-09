@@ -228,13 +228,16 @@ def split_by_punct(text):
 
 def split_word_with_dashes(word):
     i = 0 # index of current position in word. Start at 7 b/c end index of first word
-        
+    
     while len(word[i:]) > 5:
         #check if last digit a # and move that symbol to next word
         if len(word) > i + 6:
             if word[i+6] == '#':
                 send_word(word[i:i+6] + '-')
                 i = i + 6
+            elif word[i+6] == '-': # Remove double dashes
+                send_word(word[i:i+7])
+                i = i + 7
             else:
                 send_word(word[i:i+7] + '-')
                 i = i + 7
