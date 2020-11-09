@@ -179,10 +179,10 @@ def pad_numbers(text):
     newWord = ''
     prevChar = ''
 
-    # check if there is a number in the word and need to add padding character
+    # check if there is a number in the word
     for char in text:
         # change the group to add the padding char (#)
-        if char.isdigit() and not (prevChar.isdigit() or prevChar == '#' or prevChar == '.' or prevChar == ','): #if number and not already padded
+        if char.isdigit() and not (prevChar.isdigit() or prevChar == '#' or prevChar == '.' or prevChar == ','): #if number and not already padded or formatted in a way padding not necessary
             newWord += '#'
             newWord += char
         else:
@@ -196,6 +196,7 @@ def split_by_punct(text):
     '''
     carry = ""
     to_send = ""
+    i = 7 #index of current position in to_send. Start at 7 b/c only used in more than one send
     
     for t in text:
         if carry !="" and (t != "" and t != " "):
@@ -210,11 +211,11 @@ def split_by_punct(text):
             send_word(to_send)
         elif len(to_send) > 8:
             # split word with dashes
-            send_word(to_send[0:7] + '-')
-            if len(to_send[7:]) > 5:
-                send_word(to_send[7:])
-            else:
-                carry = to_send[7:]
+            send_word(to_send[0:i] + '-')
+            while len(to_send[i:]) > 5:
+                send_word(to_send[i:i+7] + '-')
+                i = i + 7
+            carry = to_send[i:]
         elif len(to_send) < 5:
             carry = to_send
         else:
@@ -229,12 +230,12 @@ def group_text(text):
     words = text.split()
     carry = "" #leftovers from previous word
     puncts = '([-:,.!?;/])'
-    for init_w in words:
+    for word in words:
         if carry != "":
-            init_w = carry + " " + init_w
+            word = carry + " " + word
         carry = "" # reset carry
         
-        w = pad_numbers(init_w) # add in extra char if string includes a number
+        w = pad_numbers(word) # add in extra char if string includes a number
 
         if len(w) == 8:
             send_word(w)
