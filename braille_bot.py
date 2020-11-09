@@ -11,7 +11,8 @@ import subprocess
 import serial
 import pyautogui
 import pytesseract
-import serial.tools.list_ports 
+import serial.tools.list_ports
+import unidecode
 from pynput import keyboard
 
 linux_port_dir = "/dev/"
@@ -111,7 +112,6 @@ def on_press(key):
     '''
     Runs when key is pressed to see if it is a hotkey
     '''
-    print(key)
     if any([key in hotkey for hotkey in hotkeys]):
         print("Adding key")
         current.add(key)
@@ -134,7 +134,6 @@ def screenshot():
     im = get_current_window()
     width, height = im.size
     im1 = im.crop((0, height/12, width, height))
-    im1.show()  #temp. Opens window to see what the screenshot looks like
 
     # Read in image, and send to pytesseract -> text
     text = pytesseract.image_to_string(im1)
@@ -162,7 +161,7 @@ def process_text(text):
     Filters text to be ready for Braille translation
     '''
     # Allow only alphanumeric and characters in 'allowed' list
-    allowed = [' ', '!', '"', '#', '$', '-', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', ':', ';', '<', '=', '>', '?', '@']
+    allowed = [' ', '!', '"', '#', '-', '\'', '(', ')', ',', '-', '.', ':', ';', '?']
     text = ''.join(
         c.lower() if c.isalnum() or c in allowed else ' '
         for c in text
@@ -185,16 +184,17 @@ def process_text(text):
 
 def pad_numbers(text):
     '''
-    Pad text by adding an indicator character (`) before any numbers
+    Pad text by adding an indicator character (#) before any numbers
     '''
     newWord = ''
     prevChar = ''
 
-    # check if there is a number in the word and need to add padding character
+    # check if there is a number in the word
     for char in text:
-        # change the group to add the padding char (`)
-        if char.isdigit() and prevChar != '`': #if number and not already padded
-            newWord += '`'
+        # change the group to add the padding char (#)
+        if char.isdigit() and not (prevChar.isdigit() or prevChar == '#' or prevChar == '.' or prevChar == ','): 
+            #if number and not already padded or formatted in a way where padding not necessary
+            newWord += '#'
             newWord += char
         else:
             newWord += char
@@ -205,33 +205,61 @@ def split_by_punct(text):
     '''
     Takes split text and sends the correct segments from that. Returns any carry remaining
     '''
-    print("In split_by_punct")
     carry = ""
     to_send = ""
-    
+    i = 7 #index of current position in to_send. Start at 7 b/c only used in more than one send
+    must_send = False #exception variable to indicate must send value
+
     for t in text:
-        if carry !="" and (t != "" and t != " "):
+        if carry !="" and (t != "" and t != " ") and len(t) > 8-len(carry):
             send_word(carry)
+            to_send = t
+        elif carry !="" and (t != "" and t != " ") and len(t) < 8-len(carry): #less than b/c dash
+            to_send = carry + ' ' + t
+            must_send = True
         elif carry != "":
             next
+        else:
+            to_send = t
         carry = ""
-
-        to_send = t
-
-        if len(to_send) == 8:
+        
+        if len(to_send) == 8 or must_send:
             send_word(to_send)
+            must_send = False
         elif len(to_send) > 8:
             # split word with dashes
-            send_word(to_send[0:7] + '-')
-            if len(to_send[7:]) > 5:
-                send_word(to_send[7:])
-            else:
-                carry = to_send[7:]
+            carry = split_word_with_dashes(to_send)
         elif len(to_send) < 5:
             carry = to_send
+
         else:
             send_word(to_send)
         
+    return carry
+
+def split_word_with_dashes(word):
+    '''
+    Adds dashes in words not otherwise split-able
+    '''
+    i = 0 # index of current position in word. Start at 7 b/c end index of first word
+
+    while len(word[i:]) > 5:
+        #check if last digit a # and move that symbol to next word
+        if len(word) > i + 6:
+            if word[i+6] == '#':
+                send_word(word[i:i+6] + '-')
+                i = i + 6
+            elif word[i+6] == '-': # Remove double dashes
+                send_word(word[i:i+7])
+                i = i + 7
+            else:
+                send_word(word[i:i+7] + '-')
+                i = i + 7
+        else:
+            send_word(word[i:i+7] + '-')
+            i = i + 7
+    carry = word[i:]
+
     return carry
 
 def group_text(text):
@@ -241,12 +269,12 @@ def group_text(text):
     words = text.split()
     carry = "" #leftovers from previous word
     puncts = '([-:,.!?;/])'
-    for init_w in words:
+    for word in words:
         if carry != "":
-            init_w = carry + " " + init_w
+            word = carry + " " + word
         carry = "" # reset carry
         
-        w = pad_numbers(init_w) # add in extra char if string includes a number
+        w = pad_numbers(word) # add in extra char if string includes a number
 
         if len(w) == 8:
             send_word(w)
@@ -261,19 +289,13 @@ def group_text(text):
                 carry = split_by_punct(temp)      
             else: 
                 # too long, split with dashes
-                send_word(w[0:7] + '-') #first 7 char and dash
-                if len(w[7:]) > 5:
-                    send_word(w[7:])
-                else:
-                    carry = w[7:]
+                carry = split_word_with_dashes(w)
         elif len(w) < 5:
             # short word, save to see if combine with next word
             carry = w
         else:
             send_word(w)
     send_word(carry) # send any remaining words stored
-
-
 
 def send_word(word):
     global ser
@@ -282,10 +304,13 @@ def send_word(word):
     '''
     while(len(word) < 8):
         word = word + ' '
+    
+    #check if contains accented characters and translate to ascii
+    norm_word = unidecode.unidecode(word)
     print("Sending: {}|\n".format(word))
-
-    word = word.encode('ASCII')
-    ser.write(word)
+    norm_word = norm_word.encode('ASCII')
+    
+    ser.write(norm_word)
 
     ard_ready = 0
     while ard_ready == 0:
