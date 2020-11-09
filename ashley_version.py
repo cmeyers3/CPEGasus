@@ -197,31 +197,45 @@ def split_by_punct(text):
     carry = ""
     to_send = ""
     i = 7 #index of current position in to_send. Start at 7 b/c only used in more than one send
-    
+    must_send = False #exception variable to indicate must send value
+
     for t in text:
-        if carry !="" and (t != "" and t != " "):
+        if carry !="" and (t != "" and t != " ") and len(t) > 8-len(carry):
             send_word(carry)
+            to_send = t
+        elif carry !="" and (t != "" and t != " ") and len(t) < 8-len(carry): #less than b/c -
+            to_send = carry + ' ' + t
+            must_send = True
         elif carry != "":
             next
+        else:
+            to_send = t
         carry = ""
-
-        to_send = t
-
-        if len(to_send) == 8:
+        
+        if len(to_send) == 8 or must_send:
             send_word(to_send)
+            must_send = False
         elif len(to_send) > 8:
             # split word with dashes
-            send_word(to_send[0:i] + '-')
-            while len(to_send[i:]) > 5:
-                send_word(to_send[i:i+7] + '-')
-                i = i + 7
-            carry = to_send[i:]
+            carry = split_word_with_dashes(to_send)
         elif len(to_send) < 5:
             carry = to_send
+
         else:
             send_word(to_send)
         
     return carry
+
+def split_word_with_dashes(word):
+    i = 7 # index of current position in word. Start at 7 b/c end index of first word
+    send_word(word[0:i] + '-')
+    while len(word[i:]) > 5:
+        send_word(word[i:i+7] + '-')
+        i = i + 7
+    carry = word[i:]
+
+    return carry
+
 
 def group_text(text):
     '''
@@ -250,11 +264,7 @@ def group_text(text):
                 carry = split_by_punct(temp)      
             else: 
                 # too long, split with dashes
-                send_word(w[0:7] + '-') #first 7 char and dash
-                if len(w[7:]) > 5:
-                    send_word(w[7:])
-                else:
-                    carry = w[7:]
+                carry = split_word_with_dashes(w)
         elif len(w) < 5:
             # short word, save to see if combine with next word
             carry = w
