@@ -12,4 +12,3 @@ pip3 install -r requirements.txt
 
 # Bugs/ToDo
  - Periods disappearing between preprocessed and processed text
- - A few funky things with dashes / numbers
